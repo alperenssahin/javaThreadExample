@@ -2,10 +2,7 @@ package pgdp.space;
 
 import static pgdp.space.ConnectionType.*;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public final class Space {
     private final Map<Beacon, List<BeaconConnection>> connections;
@@ -13,7 +10,7 @@ public final class Space {
     Map<Beacon, List<BeaconConnection>> getBeaconConnections() {
         return connections;
     }
-
+    public static List<Spaceuin> radio = new LinkedList<>();
     public Space(Map<Beacon, List<BeaconConnection>> connections) {
         this.connections = Collections.unmodifiableMap(connections);
     }
@@ -38,5 +35,6 @@ public final class Space {
 
         Spaceuin pingu = new Spaceuin(alpha, epsilon, new SimpleFlightRecorder());
         pingu.start();
+        radio.add(pingu);
     }
 }
