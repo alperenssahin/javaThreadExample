@@ -8,6 +8,7 @@ public class Spaceuin extends Thread {
     FlightRecorder flightRecorder;
     Beacon current;
     int selectIndex = 0;
+    public static boolean done;
     public Spaceuin(Beacon start, Beacon destination, FlightRecorder flightRecorder) {
         // TODO
         this.start = start;
@@ -18,54 +19,57 @@ public class Spaceuin extends Thread {
 
 
     }
-    public void run(){
+
+    public void run() {
         boolean done = false;
-        synchronized (this.current){
-            while (!done){
-                BeaconConnection bc = getNextWay();
-                if(bc.beacon().equals(current)){
-                    selectIndex++;
-                    if(selectIndex == current.connections().size()){
-                        //there is no way
+        synchronized (this.current) {
+            while (!Spaceuin.done) {
+                boolean forState = true;
+                for( BeaconConnection bc :current.connections()){
+//                    if (bc.beacon().equals(current)) {
+//                        if (selectIndex == current.connections().size()) {
+//                            //there is no way
+//                        }
+//                        continue;
+//                    }
+                    if (bc.beacon().equals(destination)) {
+                        this.flightRecorder.recordArrival(bc.beacon());
+                        this.flightRecorder.tellStory();
+                        Space.radio.remove(this);
+                        forState =false;
+                        break;
+                    } else {
+                        if (bc.type() == ConnectionType.WORMHOLE) {
+                            FlightRecorder flightRecorderCopy = this.flightRecorder.createCopy();
+                            Spaceuin nt = new Spaceuin(bc.beacon(), this.destination, flightRecorderCopy);
+                            nt.start();
+                        }
+                        else if (bc.type() == ConnectionType.NORMAL) {
+                            this.flightRecorder.recordArrival(current);
+                            this.flightRecorder.recordDeparture(current);
+                            current = bc.beacon();
+                        }
                     }
-                    continue;
                 }
-                if(!isAnyPenguInBeacon(bc.beacon())){
-                    this.flightRecorder.recordArrival(current);
-                    current = bc.beacon();
-                }else{
-                    continue;
-                }
-                if(bc.type() == ConnectionType.WORMHOLE){
-                    this.flightRecorder.recordDeparture(current);
-                    FlightRecorder flightRecorderCopy = this.flightRecorder.createCopy();
-                    Spaceuin nt = new Spaceuin(current,this.destination,flightRecorderCopy);
-                    nt.start();
-                    break;
-                }
-//                if(bc.type() == ConnectionType.NORMAL){
-//                    this.flightRecorder.recordArrival(current);
-//                }
-                selectIndex = 0;
-                if(current.equals(destination) ){
-                    this.flightRecorder.tellStory();
-                    Space.radio.remove(this);
-                    done = true;
+                if(!forState){
+                    Spaceuin.done=true;
                 }
             }
         }
     }
-    public boolean isAnyPenguInBeacon(Beacon target){
-        for(Spaceuin s : Space.radio){
-            if(s.current.equals(target)){
+
+    public boolean isAnyPenguInBeacon(Beacon target) {
+        for (Spaceuin s : Space.radio) {
+            if (s.current.equals(target)) {
                 return true;
             }
         }
         return false;
     }
-    public BeaconConnection getNextWay(){
-        for (BeaconConnection bc : current.connections()){
-            if(bc.beacon().equals(destination)){
+
+    public BeaconConnection getNextWay() {
+        for (BeaconConnection bc : current.connections()) {
+            if (bc.beacon().equals(destination)) {
                 return bc;
             }
         }
