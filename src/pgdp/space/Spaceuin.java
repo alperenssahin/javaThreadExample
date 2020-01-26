@@ -25,22 +25,24 @@ public class Spaceuin extends Thread {
                 continue;
             }
             if(!isAnyPenguInBeacon(bc.beacon())){
-                flightRecorder.recordDeparture(current);
+                this.flightRecorder.recordDeparture(current);
                 current = bc.beacon();
             }else{
                 continue;
             }
             if(bc.type() == ConnectionType.WORMHOLE){
+                this.flightRecorder.recordArrival(current);
                 FlightRecorder flightRecorderCopy = this.flightRecorder.createCopy();
                 Spaceuin nt = new Spaceuin(current,this.destination,flightRecorderCopy);
                 nt.start();
+                break;
             }
             if(bc.type() == ConnectionType.NORMAL){
-                selectIndex = 0;
-                flightRecorder.recordArrival(current);
+                this.flightRecorder.recordArrival(current);
             }
+            selectIndex = 0;
             if(current.equals(destination) ){
-                flightRecorder.tellStory();
+                this.flightRecorder.tellStory();
                 Space.radio.remove(this);
                 done = true;
             }
