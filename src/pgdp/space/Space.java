@@ -35,6 +35,6 @@ public final class Space {
 
         Spaceuin pingu = new Spaceuin(alpha, epsilon, new SimpleFlightRecorder());
         pingu.start();
-        radio.add(pingu);
+
     }
 }

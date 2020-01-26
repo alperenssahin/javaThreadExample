@@ -14,40 +14,48 @@ public class Spaceuin extends Thread {
         this.current = start;
         this.destination = destination;
         this.flightRecorder = flightRecorder;
+        this.flightRecorder.recordArrival(start);
+        Space.radio.add(this);
+
+
+    }
+    public void run(){
         boolean done = false;
-        while (!done){
-            BeaconConnection bc = getNextWay();
-            if(bc.beacon().equals(current)){
-                selectIndex++;
-                if(selectIndex == current.connections().size()){
-                    //there is no way
+        synchronized (this.current){
+            while (!done){
+                BeaconConnection bc = getNextWay();
+                if(bc.beacon().equals(current)){
+                    selectIndex++;
+                    if(selectIndex == current.connections().size()){
+                        //there is no way
+                    }
+                    continue;
                 }
-                continue;
-            }
-            if(!isAnyPenguInBeacon(bc.beacon())){
-                this.flightRecorder.recordDeparture(current);
-                current = bc.beacon();
-            }else{
-                continue;
-            }
-            if(bc.type() == ConnectionType.WORMHOLE){
-                this.flightRecorder.recordArrival(current);
-                FlightRecorder flightRecorderCopy = this.flightRecorder.createCopy();
-                Spaceuin nt = new Spaceuin(current,this.destination,flightRecorderCopy);
-                nt.start();
-                break;
-            }
-            if(bc.type() == ConnectionType.NORMAL){
-                this.flightRecorder.recordArrival(current);
-            }
-            selectIndex = 0;
-            if(current.equals(destination) ){
-                this.flightRecorder.tellStory();
-                Space.radio.remove(this);
-                done = true;
-            }
+                if(!isAnyPenguInBeacon(bc.beacon())){
+                    this.flightRecorder.recordDeparture(current);
+                    current = bc.beacon();
+                }else{
+                    continue;
+                }
+                if(bc.type() == ConnectionType.WORMHOLE){
+                    this.flightRecorder.recordArrival(current);
+                    FlightRecorder flightRecorderCopy = this.flightRecorder.createCopy();
+                    Spaceuin nt = new Spaceuin(current,this.destination,flightRecorderCopy);
+                    nt.start();
+                    break;
+                }
+                if(bc.type() == ConnectionType.NORMAL){
+                    this.flightRecorder.recordArrival(current);
+                }
+                selectIndex = 0;
+                if(current.equals(destination) ){
+                    this.flightRecorder.tellStory();
+                    Space.radio.remove(this);
+                    done = true;
+                }
 
 
+            }
         }
     }
     public boolean isAnyPenguInBeacon(Beacon target){
